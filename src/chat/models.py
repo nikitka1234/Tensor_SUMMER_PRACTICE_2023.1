@@ -1,38 +1,65 @@
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Text, DateTime, ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 import uuid
 from datetime import datetime
 
-from src.database import Base
+from src.base import Base
+from .choices import ChatType, UserRole
+
+if TYPE_CHECKING:
+    from src.auth.models import User
+    from src.search.models import ChatTags
 
 
 class Message(Base):
-    __tablename__ = "message"
+    __tablename__ = "messages"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    text = Column(Text, nullable=False)
-    sender_id = Column(UUID, ForeignKey("user.id"))
-    recipient_id = Column(UUID, ForeignKey("user.id"))
-    time = Column(TIMESTAMP, default=datetime.utcnow)
+    id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=False)
+    chat_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"), nullable=False)
+    external: Mapped[dict] = mapped_column(JSONB)
 
-    sender = relationship("User", back_populates="message")
-    recipient = relationship("User", back_populates="message")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+
+    user: Mapped["User"] = relationship("User", back_populates="messages")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="messages")
 
 
-class ChatParticipant(Base):
-    __tablename__ = "chat_participant"
-    chat_id = Column(UUID, ForeignKey("chat.id"))
-    user_id = Column(UUID, ForeignKey("user.id"))
+class UserChats(Base):
+    __tablename__ = "user_chats"
 
-    chat = relationship("Chat", back_populates="participants")
-    user = relationship("User", back_populates="participants")
+    id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=False)
+    chat_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"), nullable=False)
+    role: Mapped[UserRole] = mapped_column(String(length=320), default=UserRole.user, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+
+    user: Mapped["User"] = relationship("User", back_populates="user_chats")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="user_chats")
 
 
 class Chat(Base):
-    __tablename__ = "chat"
+    __tablename__ = "chats"
 
-    id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    type: Mapped[ChatType] = mapped_column(String(length=320), nullable=False)
+    external: Mapped[dict] = mapped_column(JSONB)
+    parent_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"))
 
-    participants = relationship("ChatParticipant", back_populates="chat")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+
+    messages: Mapped[list["Message"]] = relationship("Message", back_populates="chat")
+    parent: Mapped["Chat"] = relationship("Chat", back_populates="parent")
+    chat_users: Mapped[list["UserChats"]] = relationship("UserChats", back_populates="chat")
+    chat_tags: Mapped[list["ChatTags"]] = relationship("ChatTags", back_populates="chat")
