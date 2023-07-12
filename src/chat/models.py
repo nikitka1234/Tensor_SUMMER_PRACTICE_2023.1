@@ -22,11 +22,11 @@ class Message(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=False)
     chat_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"), nullable=False)
-    external: Mapped[dict] = mapped_column(JSONB)
+    external: Mapped[dict] = mapped_column(JSONB, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="messages")
     chat: Mapped["Chat"] = relationship("Chat", back_populates="messages")
@@ -41,10 +41,11 @@ class UserChats(Base):
     role: Mapped[UserRole] = mapped_column(String(length=320), default=UserRole.user, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="user_chats")
-    chat: Mapped["Chat"] = relationship("Chat", back_populates="user_chats")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="chat_users")
 
 
 class Chat(Base):
@@ -52,14 +53,13 @@ class Chat(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
     type: Mapped[ChatType] = mapped_column(String(length=320), nullable=False)
-    external: Mapped[dict] = mapped_column(JSONB)
-    parent_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"))
+    external: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    parent_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     messages: Mapped[list["Message"]] = relationship("Message", back_populates="chat")
-    parent: Mapped["Chat"] = relationship("Chat", back_populates="parent")
     chat_users: Mapped[list["UserChats"]] = relationship("UserChats", back_populates="chat")
     chat_tags: Mapped[list["ChatTags"]] = relationship("ChatTags", back_populates="chat")

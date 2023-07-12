@@ -22,7 +22,7 @@ class Tag(Base):
     title: Mapped[str] = mapped_column(String(320), unique=True, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     category: Mapped["Category"] = relationship("Category", back_populates="tags")
     user_tags: Mapped[list["UserTags"]] = relationship("UserTags", back_populates="tag")
@@ -37,7 +37,7 @@ class UserTags(Base):
     tag_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("tags.id"), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="user_tags")
     tag: Mapped["Tag"] = relationship("Tag", back_populates="user_tags")
@@ -51,7 +51,7 @@ class ChatTags(Base):
     tag_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("tags.id"), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     chat: Mapped["Chat"] = relationship("Chat", back_populates="chat_tags")
     tag: Mapped["Tag"] = relationship("Tag", back_populates="chat_tags")
@@ -62,10 +62,10 @@ class Category(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(length=320), unique=True, nullable=False)
-    external: Mapped[dict] = mapped_column(JSONB)
+    external: Mapped[dict] = mapped_column(JSONB, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     tags: Mapped[list["Tag"]] = relationship("Tag", back_populates="category")

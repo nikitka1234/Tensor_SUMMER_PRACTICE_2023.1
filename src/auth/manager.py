@@ -4,7 +4,7 @@ from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, UUIDIDMixin
 
 from src.database import get_user_db
-from src.database import User
+from src.auth.models import User
 from src.config import auth_settings
 
 

@@ -25,11 +25,11 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    deleted_at: Mapped[datetime] = mapped_column(DateTime)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     last_login: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
-    external: Mapped[dict] = mapped_column(JSONB)
+    external: Mapped[dict] = mapped_column(JSONB, nullable=True)
 
     # full_name: Mapped[str] = mapped_column(String(length=320))
     # birth_date: Mapped[date] = mapped_column(Date)

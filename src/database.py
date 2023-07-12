@@ -1,9 +1,8 @@
-from typing import AsyncGenerator, TYPE_CHECKING
+from typing import AsyncGenerator
 
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
 
 from .config import database_settings
 
