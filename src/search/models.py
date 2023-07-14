@@ -25,8 +25,8 @@ class Tag(Base):
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     category: Mapped["Category"] = relationship("Category", back_populates="tags")
-    user_tags: Mapped[list["UserTags"]] = relationship("UserTags", back_populates="tag")
-    chat_tags: Mapped[list["ChatTags"]] = relationship("ChatTags", back_populates="tag")
+    users: Mapped[list["User"]] = relationship("User", secondary="user_tags", back_populates="tags")
+    chats: Mapped[list["Chat"]] = relationship("Chat", secondary="chat_tags", back_populates="tags")
 
 
 class UserTags(Base):

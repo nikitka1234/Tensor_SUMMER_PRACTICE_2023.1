@@ -12,7 +12,7 @@ from .choices import ChatType, UserRole
 
 if TYPE_CHECKING:
     from src.auth.models import User
-    from src.search.models import ChatTags
+    from src.search.models import Tag
 
 
 class Message(Base):
@@ -61,5 +61,5 @@ class Chat(Base):
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     messages: Mapped[list["Message"]] = relationship("Message", back_populates="chat")
-    chat_users: Mapped[list["UserChats"]] = relationship("UserChats", back_populates="chat")
-    chat_tags: Mapped[list["ChatTags"]] = relationship("ChatTags", back_populates="chat")
+    users: Mapped[list["User"]] = relationship("User", secondary="user_chats", back_populates="chats")
+    tags: Mapped[list["Tag"]] = relationship("Tag", secondary="chat_tags", back_populates="chats")

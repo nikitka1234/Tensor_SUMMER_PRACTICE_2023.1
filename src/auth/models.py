@@ -10,8 +10,8 @@ from datetime import datetime
 from src.base import Base
 
 if TYPE_CHECKING:
-    from src.chat.models import Message, UserChats
-    from src.search.models import UserTags
+    from src.chat.models import Message, Chat
+    from src.search.models import Tag
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
@@ -39,5 +39,5 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     # emoji_status: Mapped[str | None] = mapped_column(String(length=64))
 
     messages: Mapped[list["Message"]] = relationship("Message", back_populates="user")
-    user_chats: Mapped[list["UserChats"]] = relationship("UserChats", back_populates="user")
-    user_tags: Mapped[list["UserTags"]] = relationship("UserTags", back_populates="user")
+    chats: Mapped[list["Chat"]] = relationship("Chat", secondary="user_chats", back_populates="users")
+    tags: Mapped[list["Tag"]] = relationship("Tag", secondary="user_tags", back_populates="users")

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_async_session
 from .manager import manager
 from .models import Chat
-from .schemas import ChatCreate, UserChatsCreate
+from .schemas import ChatCreate, UserChatsCreate, MessageCreate
 from .service import crud_chat, crud_message, crud_user_chats
 
 router = APIRouter()
@@ -22,15 +22,20 @@ async def new_chat(chat: ChatCreate, users_id: list[uuid.UUID], session: AsyncSe
     print(jsonable_encoder(chat_obj))
 
     for user in users_id:
-        user = UserChatsCreate(user_id=user, chat_id=chat_obj.id)
-        await crud_user_chats.create(session, obj_in=user)
+        user_chats_create = UserChatsCreate(user_id=user, chat_id=chat_obj.id)
+        await crud_user_chats.create(session, obj_in=user_chats_create)
 
 
 @router.post("/add_chat_users")
 async def add_chat_user(chat_id: uuid.UUID, users_id: list[uuid.UUID], session: AsyncSession = Depends(get_async_session)):
     for user in users_id:
-        user = UserChatsCreate(user_id=user, chat_id=chat_id)
-        await crud_user_chats.create(session, obj_in=user)
+        user_chats_create = UserChatsCreate(user_id=user, chat_id=chat_id)
+        await crud_user_chats.create(session, obj_in=user_chats_create)
+
+
+@router.post("/add_message")
+async def add_message(message: MessageCreate, session: AsyncSession = Depends(get_async_session)):
+    await crud_message.create(session, obj_in=message)
 
 
 # html = """
