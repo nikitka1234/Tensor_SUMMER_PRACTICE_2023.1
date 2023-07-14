@@ -12,6 +12,9 @@ from .manager import manager
 from .models import Chat
 from .schemas import ChatCreate, UserChatsCreate, MessageCreate
 from .service import crud_chat, crud_message, crud_user_chats
+from src.auth.service import crud_user
+from ..auth.models import User
+from ..auth.router import fastapi_users
 
 router = APIRouter()
 
@@ -36,6 +39,18 @@ async def add_chat_user(chat_id: uuid.UUID, users_id: list[uuid.UUID], session: 
 @router.post("/add_message")
 async def add_message(message: MessageCreate, session: AsyncSession = Depends(get_async_session)):
     await crud_message.create(session, obj_in=message)
+
+
+@router.get("/all_chats")
+async def all_chats(user_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    user_obj = await crud_user.get(session, id=user_id)
+    return user_obj.chats
+
+
+current_user = fastapi_users.current_user()
+@router.get("/user_id")
+def protected_route(user: User = Depends(current_user)):
+    return f"Hello, {user.email}, {user.id}"
 
 
 # html = """

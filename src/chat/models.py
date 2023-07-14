@@ -12,7 +12,7 @@ from .choices import ChatType, UserRole
 
 if TYPE_CHECKING:
     from src.auth.models import User
-    from src.search.models import Tag
+    from src.search.models import Tag, ChatTags
 
 
 class Message(Base):
@@ -36,16 +36,16 @@ class UserChats(Base):
     __tablename__ = "user_chats"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=False)
-    chat_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), primary_key=True, nullable=False)
+    chat_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"), primary_key=True, nullable=False)
     role: Mapped[UserRole] = mapped_column(String(length=320), default=UserRole.user, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="user_chats")
-    chat: Mapped["Chat"] = relationship("Chat", back_populates="chat_users")
+    user: Mapped["User"] = relationship("User", back_populates="user_chats_association")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="user_chats_association")
 
 
 class Chat(Base):
@@ -61,5 +61,8 @@ class Chat(Base):
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     messages: Mapped[list["Message"]] = relationship("Message", back_populates="chat")
-    users: Mapped[list["User"]] = relationship("User", secondary="user_chats", back_populates="chats")
-    tags: Mapped[list["Tag"]] = relationship("Tag", secondary="chat_tags", back_populates="chats")
+    users: Mapped[list["User"]] = relationship(secondary="user_chats", back_populates="chats", lazy="selectin")
+    tags: Mapped[list["Tag"]] = relationship(secondary="chat_tags", back_populates="chats", lazy="selectin")
+
+    user_chats_association: Mapped[list["UserChats"]] = relationship(back_populates="chat", viewonly=True)
+    chat_tags_association: Mapped[list["ChatTags"]] = relationship(back_populates="chat", viewonly=True)

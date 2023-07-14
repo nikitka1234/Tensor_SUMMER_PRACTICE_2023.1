@@ -2,6 +2,7 @@ from typing import Any, Generic, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base import Base
@@ -16,7 +17,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     async def get(self, db: AsyncSession, id: Any) -> ModelType | None:
-        return db.query(self.model).filter(self.model.id == id).first()
+        q = select(self.model)
+        result = await db.execute(q)
+        curr = result.scalars()
+        print(curr)
+        CACHE = {i.id: i for i in curr}
+        return CACHE[id]
 
     async def get_multi(
             self,
