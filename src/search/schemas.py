@@ -23,6 +23,20 @@ class TagUpdate(TagBase):
     deleted_at: datetime | None = None
 
 
+class TagInDB(TagBase):
+    id: uuid.UUID
+    created_at: datetime
+    deleted_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class Tag(TagInDB):
+    pass
+
+
+
 ####################
 # UserTags schemas #
 ####################
@@ -38,6 +52,19 @@ class UserTagsCreate(UserTagsBase):
 
 class UserTagsUpdate(UserTagsBase):
     deleted_at: datetime | None = None
+
+
+class UserTagsInDB(UserTagsBase):
+    id: uuid.UUID
+    created_at: datetime
+    deleted_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class UserTags(UserTagsInDB):
+    pass
 
 
 ####################
@@ -57,6 +84,19 @@ class ChatTagsUpdate(ChatTagsBase):
     deleted_at: datetime | None = None
 
 
+class ChatTagsInDB(ChatTagsBase):
+    id: uuid.UUID
+    created_at: datetime
+    deleted_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class ChatTags(ChatTagsInDB):
+    pass
+
+
 ####################
 # Category schemas #
 ####################
@@ -73,3 +113,17 @@ class CategoryCreate(CategoryBase):
 class CategoryUpdate(CategoryBase):
     updated_at: datetime
     deleted_at: datetime | None = None
+
+
+class CategoryInDB(CategoryBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class Category(CategoryInDB):
+    pass

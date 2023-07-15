@@ -25,6 +25,21 @@ class MessageUpdate(MessageBase):
     deleted_at: datetime | None = None
 
 
+class MessageInDB(MessageBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    chat_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class Message(MessageInDB):
+    pass
+
 #####################
 # UserChats schemas #
 #####################
@@ -43,6 +58,21 @@ class UserChatsUpdate(UserChatsBase):
     deleted_at: datetime | None = None
 
 
+class UserChatsInDB(UserChatsBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    chat_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class UserChats(UserChatsInDB):
+    pass
+
 ################
 # Chat schemas #
 ################
@@ -60,3 +90,17 @@ class ChatCreate(ChatBase):
 class ChatUpdate(ChatBase):
     updated_at: datetime
     deleted_at: datetime | None = None
+
+
+class ChatInDB(ChatBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class Chat(ChatInDB):
+    pass
