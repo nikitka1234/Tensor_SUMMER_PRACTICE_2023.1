@@ -1,9 +1,7 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
-
-from src.chat.choices import ChatType, UserRole
 
 
 ###############
@@ -20,7 +18,23 @@ class TagCreate(TagBase):
 
 
 class TagUpdate(TagBase):
-    deleted_at: datetime | None = None
+    pass
+
+
+class TagDB(BaseModel):
+    id: uuid.UUID
+    category_id: uuid.UUID
+    title: str = Field(max_length=320)
+
+    created_at: datetime
+    deleted_at: datetime | None
+
+    class Config:
+        orm_mode = True
+
+
+class Tag(TagDB):
+    pass
 
 
 ####################
@@ -37,7 +51,23 @@ class UserTagsCreate(UserTagsBase):
 
 
 class UserTagsUpdate(UserTagsBase):
-    deleted_at: datetime | None = None
+    pass
+
+
+class UserTagsDB(BaseModel):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    tag_id: uuid.UUID
+
+    created_at: datetime
+    deleted_at: datetime | None
+
+    class Config:
+        orm_mode = True
+
+
+class UserTags(UserTagsDB):
+    pass
 
 
 ####################
@@ -54,7 +84,23 @@ class ChatTagsCreate(ChatTagsBase):
 
 
 class ChatTagsUpdate(ChatTagsBase):
-    deleted_at: datetime | None = None
+    pass
+
+
+class ChatTagsDB(BaseModel):
+    id: uuid.UUID
+    chat_id: uuid.UUID
+    tag_id: uuid.UUID
+
+    created_at: datetime
+    deleted_at: datetime | None
+
+    class Config:
+        orm_mode = True
+
+
+class ChatTags(ChatTagsDB):
+    pass
 
 
 ####################
@@ -71,5 +117,23 @@ class CategoryCreate(CategoryBase):
 
 
 class CategoryUpdate(CategoryBase):
+    pass
+
+
+class CategoryDB(BaseModel):
+    id: uuid.UUID
+    title: str = Field(max_length=320)
+    external: dict
+
+    created_at: datetime
     updated_at: datetime
-    deleted_at: datetime | None = None
+    deleted_at: datetime | None
+
+    tags: list[Tag]
+
+    class Config:
+        orm_mode = True
+
+
+class Category(CategoryDB):
+    pass

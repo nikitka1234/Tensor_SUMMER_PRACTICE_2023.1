@@ -5,9 +5,17 @@ from pydantic import EmailStr
 
 from datetime import datetime
 
+from ..search.schemas import Tag
+
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+    last_login: datetime
+    external: dict | None = None
+
+    tags: list[Tag]
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -25,7 +33,4 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_active: bool | None
     is_superuser: bool | None
     is_verified: bool | None
-    updated_at: datetime
-    deleted_at: datetime | None = None
-    last_login: datetime
     external: dict | None = None

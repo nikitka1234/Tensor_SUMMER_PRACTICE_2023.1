@@ -38,7 +38,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     # status: Mapped[str] = mapped_column(String(length=320))
     # emoji_status: Mapped[str | None] = mapped_column(String(length=64))
 
-    messages: Mapped[list["Message"]] = relationship("Message", back_populates="user")
+    messages: Mapped[list["Message"]] = relationship("Message", back_populates="user", lazy="selectin")
     chats: Mapped[list["Chat"]] = relationship(secondary="user_chats", back_populates="users", lazy="selectin")
     tags: Mapped[list["Tag"]] = relationship(secondary="user_tags", back_populates="users", lazy="selectin")
 

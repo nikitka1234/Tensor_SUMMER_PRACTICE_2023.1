@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime
 from typing import Any, Generic, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
@@ -16,13 +18,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
-    async def get(self, db: AsyncSession, id: Any) -> ModelType | None:
-        q = select(self.model)
+    async def get(self, db: AsyncSession, *, model_id: uuid.UUID | int) -> ModelType | None:
+        q = select(self.model).where(self.model.id == model_id)
         result = await db.execute(q)
-        curr = result.scalars()
-        print(curr)
-        CACHE = {i.id: i for i in curr}
-        return CACHE[id]
+        curr = result.scalar()
+        return curr
 
     async def get_multi(
             self,
@@ -66,10 +66,19 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         await db.refresh(db_obj)
         return db_obj
 
+    async def delete(self, db: AsyncSession, *, model_id: uuid.UUID | int) -> ModelType:
+        db_obj = await self.get(db, model_id=model_id)
+        setattr(db_obj, "deleted_at", datetime.utcnow())
+
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
+
     async def remove(
-            self, db: AsyncSession, *, id: int
+            self, db: AsyncSession, *, model_id: uuid.UUID | int
     ) -> ModelType:
-        obj = db.query(self.model).get(id)
+        obj = await self.get(db, model_id=model_id)
         await db.delete(obj)
         await db.commit()
         return obj
