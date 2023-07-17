@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_async_session
 from .manager import manager
 from .models import Chat
-from .schemas import ChatCreate, UserChatsCreate, MessageCreate
+from .schemas import ChatCreate, UserChatsCreate, MessageCreate, MessageUpdate
 from .service import crud_chat, crud_message, crud_user_chats
 from ..auth.models import User
 from ..api.deps import current_user
@@ -44,8 +44,17 @@ async def add_chat_user(
         await crud_user_chats.create(session, obj_in=user_chats_create)
 
 
-@router.post("/chat_update", response_model=chat_schemas.Chat)
-async def chat_update(
+@router.post("delete_chat_users")
+async def delete_chat_users(
+        chat_id: uuid.UUID, users_id: list[uuid.UUID], session: AsyncSession = Depends(get_async_session)
+):
+    for user in users_id:
+        user_chats_create = UserChatsCreate(user_id=user, chat_id=chat_id)
+        await crud_user_chats.delete(session, obj_in=user_chats_create)
+
+
+@router.post("/update_chat", response_model=chat_schemas.Chat)
+async def update_chat(
         chat_id: uuid.UUID, chat: chat_schemas.ChatUpdate, session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
@@ -54,8 +63,8 @@ async def chat_update(
     return updated_chat_obj
 
 
-@router.post("/chat_delete", response_model=chat_schemas.Chat)
-async def chat_delete(chat_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+@router.post("/delete_chat", response_model=chat_schemas.Chat)
+async def delete_chat(chat_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
     deleted_chat_obj = await crud_chat.delete(session, model_id=chat_id)
 
     return deleted_chat_obj
@@ -97,49 +106,33 @@ async def add_message(
     return await crud_message.create(session, obj_in=message)
 
 
+@router.post("/update_message", response_model=chat_schemas.Message)
+async def update_message(
+        message_id: uuid.UUID, message: MessageUpdate, session: AsyncSession = Depends(get_async_session)
+):
+    message_obj = await crud_message.get(message_id)
+    updated_message_obj = await crud_message.update(session, db_obj=message_obj, obj_in=message)
+
+    return updated_message_obj
+
+
+@router.post("/delete_message", response_model=chat_schemas.Message)
+async def delete_message(message_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
+    message_obj = await crud_message.delete(session, model_id=message_id)
+
+    return message_obj
+
+
 @router.get("/user_chats", response_model=list[chat_schemas.Chat])
 async def all_chats(user: User = Depends(current_user)):
-    return user.chats
+    return [chat for chat in user.chats if not chat.deleted_at]
 
 
-# html = """
-# <!DOCTYPE html>
-# <html>
-#     <head>
-#         <title>Chat</title>
-#     </head>
-#     <body>
-#         <h1>WebSocket Chat</h1>
-#         <h2>Your ID: <span id="ws-id"></span></h2>
-#         <form action="" onsubmit="sendMessage(event)">
-#             <input type="text" id="messageText" autocomplete="off"/>
-#             <button>Send</button>
-#         </form>
-#         <ul id='messages'>
-#         </ul>
-#         <script>
-#             var client_id = Date.now()
-#             document.querySelector("#ws-id").textContent = client_id;
-#             var ws = new WebSocket(`ws://localhost:8000/ws/${client_id}`);
-#             ws.onmessage = function(event) {
-#                 var messages = document.getElementById('messages')
-#                 var message = document.createElement('li')
-#                 var content = document.createTextNode(event.data)
-#                 message.appendChild(content)
-#                 messages.appendChild(message)
-#             };
-#             function sendMessage(event) {
-#                 var input = document.getElementById("messageText")
-#                 ws.send(input.value)
-#                 input.value = ''
-#                 event.preventDefault()
-#             }
-#         </script>
-#     </body>
-# </html>
-# """
-#
-#
+@router.get("all_user_messages", response_model=list[chat_schemas.Message])
+async def all_user_messages(user: User = Depends(current_user)):
+    return [message for message in user.messages if not chat.deleted_at]
+
+
 # @app.get("/")
 # async def get():
 #     return HTMLResponse(html)
