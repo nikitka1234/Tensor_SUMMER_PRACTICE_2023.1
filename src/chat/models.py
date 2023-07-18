@@ -28,8 +28,8 @@ class Message(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="messages", lazy="selectin")
-    chat: Mapped["Chat"] = relationship("Chat", back_populates="messages", lazy="selectin")
+    user: Mapped["User"] = relationship("User", back_populates="messages")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="messages")
 
 
 class UserChats(Base):
@@ -44,8 +44,8 @@ class UserChats(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="user_chats_association", lazy="selectin")
-    chat: Mapped["Chat"] = relationship("Chat", back_populates="user_chats_association", lazy="selectin")
+    user: Mapped["User"] = relationship("User", back_populates="user_chats_association")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="user_chats_association")
 
 
 class Chat(Base):

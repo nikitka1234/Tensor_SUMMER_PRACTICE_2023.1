@@ -42,8 +42,8 @@ class UserTags(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="user_tags_association", lazy="selectin")
-    tag: Mapped["Tag"] = relationship("Tag", back_populates="user_tags_association", lazy="selectin")
+    user: Mapped["User"] = relationship("User", back_populates="user_tags_association")
+    tag: Mapped["Tag"] = relationship("Tag", back_populates="user_tags_association")
 
 
 class ChatTags(Base):
@@ -56,8 +56,8 @@ class ChatTags(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    chat: Mapped["Chat"] = relationship("Chat", back_populates="chat_tags_association", lazy="selectin")
-    tag: Mapped["Tag"] = relationship("Tag", back_populates="chat_tags_association", lazy="selectin")
+    chat: Mapped["Chat"] = relationship("Chat", back_populates="chat_tags_association")
+    tag: Mapped["Tag"] = relationship("Tag", back_populates="chat_tags_association")
 
 
 class Category(Base):

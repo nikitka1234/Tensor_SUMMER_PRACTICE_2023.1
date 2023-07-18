@@ -28,10 +28,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             self,
             db: AsyncSession,
             *,
-            skip: int = 0,
+            offset: int = 0,
             limit: int = 100
     ) -> list[ModelType]:
-        q = select(self.model)
+        q = select(self.model).offset(offset).limit(limit)
         result = await db.execute(q)
         curr = list(result.scalars())
         return curr

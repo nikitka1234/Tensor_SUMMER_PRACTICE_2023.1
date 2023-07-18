@@ -18,119 +18,144 @@ from ..api.deps import current_user
 from ..auth import schemas as user_schemas
 from ..chat import schemas as chat_schemas
 from ..search import schemas as search_schemas
+from ..search.service import crud_chat_tags
 
 router = APIRouter()
 
 
-@router.post("/new_chat", response_model=chat_schemas.Chat)
-async def new_chat(
-        chat: ChatCreate, users_id: list[uuid.UUID], session: AsyncSession = Depends(get_async_session)
+@router.get("", response_model=list[chat_schemas.Chat])
+async def chats(offset: int = 0, limit: int = 100, user: User = Depends(current_user)):
+    return user.chats[offset:offset+limit]
+
+
+@router.get("/{chat_id}", response_model=chat_schemas.Chat)
+async def chat(
+        chat_id: uuid.UUID,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    chat_obj = await crud_chat.get(session, model_id=chat_id)
+    return chat_obj
+
+
+@router.get("/{chat_id}/messages", response_model=list[chat_schemas.Message])
+async def chat_messages(
+        chat_id: uuid.UUID,
+        offset: int = 0,
+        limit: int = 100,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    chat_obj = await crud_chat.get(session, model_id=chat_id)
+    return chat_obj.messages[offset:offset+limit]
+
+
+@router.get("/{chat_id}/users", response_model=list[user_schemas.UserRead])
+async def chat_users(
+        chat_id: uuid.UUID,
+        offset: int = 0,
+        limit: int = 100,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    chat_obj = await crud_chat.get(session, model_id=chat_id)
+    return chat_obj.users[offset:offset+limit]
+
+
+@router.get("/{chat_id}/tags", response_model=list[chat_schemas.Tag])
+async def chat_tags(
+        chat_id: uuid.UUID,
+        offset: int = 0,
+        limit: int = 100,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    chat_obj = await crud_chat.get(session, model_id=chat_id)
+    return chat_obj.tags[offset:offset+limit]
+
+
+@router.post("", response_model=chat_schemas.Chat)
+async def create_chat(
+        chat: chat_schemas.ChatCreate,
+        users_id: list[uuid.UUID],
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.create(session, obj_in=chat)
 
-    for user in users_id:
-        user_chats_create = UserChatsCreate(user_id=user, chat_id=chat_obj.id)
-        await crud_user_chats.create(session, obj_in=user_chats_create)
+    for user_id in users_id:
+        user_chats_obj = UserChatsCreate(user_id=user_id, chat_id=chat_obj.id)
+        await crud_user_chats.create(session, obj_in=user_chats_obj)
 
     return chat_obj
 
 
-@router.post("/add_chat_users")
-async def add_chat_user(
-        chat_id: uuid.UUID, users_id: list[uuid.UUID], session: AsyncSession = Depends(get_async_session)
-):
-    for user in users_id:
-        user_chats_create = UserChatsCreate(user_id=user, chat_id=chat_id)
-        await crud_user_chats.create(session, obj_in=user_chats_create)
-
-
-@router.post("delete_chat_users")
-async def delete_chat_users(
-        chat_id: uuid.UUID, users_id: list[uuid.UUID], session: AsyncSession = Depends(get_async_session)
-):
-    for user in users_id:
-        user_chats_create = UserChatsCreate(user_id=user, chat_id=chat_id)
-        await crud_user_chats.delete(session, obj_in=user_chats_create)
-
-
-@router.post("/update_chat", response_model=chat_schemas.Chat)
+@router.put("/{chat_id}", response_model=chat_schemas.Chat)
 async def update_chat(
-        chat_id: uuid.UUID, chat: chat_schemas.ChatUpdate, session: AsyncSession = Depends(get_async_session)
+        chat_id: uuid.UUID,
+        chat: chat_schemas.ChatUpdate,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
     updated_chat_obj = await crud_chat.update(session, db_obj=chat_obj, obj_in=chat)
-
     return updated_chat_obj
 
 
-@router.post("/delete_chat", response_model=chat_schemas.Chat)
-async def delete_chat(chat_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    deleted_chat_obj = await crud_chat.delete(session, model_id=chat_id)
+@router.put("/{chat_id}/users")
+async def add_chat_users(
+        chat_id: uuid.UUID,
+        users_id: list[uuid.UUID],
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    for user_id in users_id:
+        user_chats_obj = UserChatsCreate(user_id=user_id, chat_id=chat_id)
+        await crud_user_chats.create(session, obj_in=user_chats_obj)
 
+
+@router.put("/{chat_id}/tags")
+async def add_chat_tags(
+        chat_id: uuid.UUID,
+        tags_id: list[uuid.UUID],
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    for tag_id in tags_id:
+        chat_tags_obj = search_schemas.ChatTagsCreate(chat_id=chat_id, tags_id=tag_id)
+        await crud_chat_tags.create(session, obj_in=chat_tags_obj)
+
+
+@router.delete("/{chat_id}", response_model=chat_schemas.Chat)
+async def delete_chat(
+        chat_id: uuid.UUID, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)
+):
+    deleted_chat_obj = crud_chat.delete(session, model_id=chat_id)
     return deleted_chat_obj
 
 
-@router.get("/chat", response_model=chat_schemas.Chat)
-async def chat(chat_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    chat_obj = await crud_chat.get(session, model_id=chat_id)
-
-    return chat_obj
-
-
-@router.get("/chat_users", response_model=list[user_schemas.UserRead])
-async def chat_users(chat_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    chat_obj = await crud_chat.get(session, model_id=chat_id)
-
-    return chat_obj.users
-
-
-@router.get("/chat_tags", response_model=list[search_schemas.Tag])
-async def chat_tags(chat_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    chat_obj = await crud_chat.get(session, model_id=chat_id)
-
-    return chat_obj.tags
-
-
-@router.get("/chat_messages", response_model=list[chat_schemas.Message])
-async def chat_messages(chat_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    chat_obj = await crud_chat.get(session, model_id=chat_id)
-
-    return chat_obj.messages
-
-
-@router.post("/add_message", response_model=chat_schemas.Message)
-async def add_message(
-        message: MessageCreate, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)
+@router.delete("/{chat_id}/users")
+async def delete_chat_users(
+        chat_id: uuid.UUID,
+        users_id: list[uuid.UUID],
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
-    message.user_id = user.id
-    return await crud_message.create(session, obj_in=message)
+    for user_id in users_id:
+        user_chats_obj = crud_user_chats.get_by_parameters(session, chat_id=chat_id, user_id=user_id)
+        delete_user_chats_obj = crud_user_chats.delete(session, model_id=user_chats_obj.id)
 
 
-@router.post("/update_message", response_model=chat_schemas.Message)
-async def update_message(
-        message_id: uuid.UUID, message: MessageUpdate, session: AsyncSession = Depends(get_async_session)
+@router.delete("/{chat_id}/tags")
+async def delete_chat_users(
+        chat_id: uuid.UUID,
+        tags_id: list[uuid.UUID],
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
-    message_obj = await crud_message.get(message_id)
-    updated_message_obj = await crud_message.update(session, db_obj=message_obj, obj_in=message)
-
-    return updated_message_obj
-
-
-@router.post("/delete_message", response_model=chat_schemas.Message)
-async def delete_message(message_id: uuid.UUID, session: AsyncSession = Depends(get_async_session)):
-    message_obj = await crud_message.delete(session, model_id=message_id)
-
-    return message_obj
-
-
-@router.get("/user_chats", response_model=list[chat_schemas.Chat])
-async def all_chats(user: User = Depends(current_user)):
-    return [chat for chat in user.chats if not chat.deleted_at]
-
-
-@router.get("all_user_messages", response_model=list[chat_schemas.Message])
-async def all_user_messages(user: User = Depends(current_user)):
-    return [message for message in user.messages if not chat.deleted_at]
+    for tag_id in tags_id:
+        chat_tags_obj = crud_chat_tags.get_by_parameters(session, chat_id=chat_id, tag_id=tag_id)
+        delete_chat_tags_obj = crud_user_chats.delete(session, model_id=chat_tags_obj.id)
 
 
 # @app.get("/")

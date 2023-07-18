@@ -129,7 +129,7 @@ class CategoryDB(BaseModel):
     updated_at: datetime
     deleted_at: datetime | None
 
-    tags: list[Tag]
+    # tags: list[Tag]
 
     class Config:
         orm_mode = True

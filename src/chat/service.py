@@ -1,3 +1,8 @@
+import uuid
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.api.crud_base import CRUDBase
 from .models import Message, UserChats, Chat
 from .schemas import (
@@ -15,7 +20,13 @@ class CRUDMessage(CRUDBase[Message, MessageCreate, MessageUpdate]):
 
 
 class CRUDUserChats(CRUDBase[UserChats, UserChatsCreate, UserChatsUpdate]):
-    pass
+    async def get_by_parameters(
+            self, db: AsyncSession, *, chat_id: uuid.UUID | int, user_id: uuid.UUID | int
+    ) -> UserChats:
+        q = select(self.model).where(self.model.chat_id == chat_id and self.model.user_id == user_id)
+        result = await db.execute(q)
+        curr = result.scalar()
+        return curr
 
 
 class CRUDChat(CRUDBase[Chat, ChatCreate, ChatUpdate]):

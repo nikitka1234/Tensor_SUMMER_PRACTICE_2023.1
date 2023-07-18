@@ -10,8 +10,8 @@ from .service import crud_tag, crud_user_tags, crud_chat_tags, crud_category
 from .choices import Holder
 from ..api.deps import current_user
 
-from ..auth import schemas as user_schemas
 from ..auth.models import User
+from ..auth import schemas as user_schemas
 from ..chat import schemas as chat_schemas
 from ..search import schemas as search_schemas
 

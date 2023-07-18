@@ -15,7 +15,7 @@ class UserRead(schemas.BaseUser[uuid.UUID]):
     last_login: datetime
     external: dict | None = None
 
-    tags: list[Tag]
+    # tags: list[Tag]
 
 
 class UserCreate(schemas.BaseUserCreate):
