@@ -17,7 +17,7 @@ from .schemas import (
 
 
 class CRUDMessage(CRUDBase[Message, MessageCreate, MessageUpdate]):
-    async def create(
+    async def create_user(
             self,
             db: AsyncSession,
             *,

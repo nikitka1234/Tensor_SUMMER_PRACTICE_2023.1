@@ -22,14 +22,15 @@ class Tag(Base):
     title: Mapped[str] = mapped_column(String(length=320), unique=True, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    category: Mapped["Category"] = relationship("Category", back_populates="tags", lazy="selectin")
-    users: Mapped[list["User"]] = relationship(secondary="user_tags", back_populates="tags", lazy="selectin")
-    chats: Mapped[list["Chat"]] = relationship(secondary="chat_tags", back_populates="tags", lazy="selectin")
+    category: Mapped["Category"] = relationship("Category", back_populates="tags")
+    users: Mapped[list["User"]] = relationship(secondary="user_tags", back_populates="tags", lazy="dynamic")
+    chats: Mapped[list["Chat"]] = relationship(secondary="chat_tags", back_populates="tags", lazy="dynamic")
 
-    user_tags_association: Mapped[list["UserTags"]] = relationship(back_populates="tag", viewonly=True)
-    chat_tags_association: Mapped[list["ChatTags"]] = relationship(back_populates="tag", viewonly=True)
+    # user_tags_association: Mapped[list["UserTags"]] = relationship(back_populates="tag", viewonly=True)
+    # chat_tags_association: Mapped[list["ChatTags"]] = relationship(back_populates="tag", viewonly=True)
 
 
 class UserTags(Base):
@@ -40,10 +41,11 @@ class UserTags(Base):
     tag_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("tags.id"), primary_key=True, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="user_tags_association")
-    tag: Mapped["Tag"] = relationship("Tag", back_populates="user_tags_association")
+    # user: Mapped["User"] = relationship("User", back_populates="user_tags_association")
+    # tag: Mapped["Tag"] = relationship("Tag", back_populates="user_tags_association")
 
 
 class ChatTags(Base):
@@ -54,10 +56,11 @@ class ChatTags(Base):
     tag_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("tags.id"), primary_key=True, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    chat: Mapped["Chat"] = relationship("Chat", back_populates="chat_tags_association")
-    tag: Mapped["Tag"] = relationship("Tag", back_populates="chat_tags_association")
+    # chat: Mapped["Chat"] = relationship("Chat", back_populates="chat_tags_association")
+    # tag: Mapped["Tag"] = relationship("Tag", back_populates="chat_tags_association")
 
 
 class Category(Base):
@@ -71,4 +74,4 @@ class Category(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    tags: Mapped[list["Tag"]] = relationship("Tag", back_populates="category", lazy="selectin")
+    tags: Mapped[list["Tag"]] = relationship("Tag", back_populates="category", lazy="dynamic")

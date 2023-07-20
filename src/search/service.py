@@ -18,7 +18,19 @@ from .schemas import (
 
 
 class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
-    pass
+    async def exist_create(self, db: AsyncSession, *, tags: list[TagCreate]) -> list[Tag]:
+        tags_title = [tag.title for tag in tags]
+        q = select(self.model).where(self.model.title.in_(tags_title))
+        result = await db.execute(q)
+        curr = list(result.scalars())
+        curr_titles = [c.title for c in curr]
+        tags = [tag for tag in tags if tag.title not in curr_titles]
+
+        for tag in tags:
+            tag_obj = await self.create(db, obj_in=tag)
+            curr.append(tag_obj)
+
+        return curr
 
 
 class CRUDUserTags(CRUDBase[UserTags, UserTagsCreate, UserTagsUpdate]):

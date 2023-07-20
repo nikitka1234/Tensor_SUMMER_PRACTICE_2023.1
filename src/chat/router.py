@@ -16,7 +16,7 @@ from ..api.deps import current_user
 from ..auth import schemas as user_schemas
 from ..chat import schemas as chat_schemas
 from ..search import schemas as search_schemas
-from ..search.service import crud_chat_tags
+from ..search.service import crud_chat_tags, crud_tag, crud_user_tags
 
 chat_router = APIRouter(prefix="/chats", tags=["chats"])
 message_router = APIRouter(prefix="/messages", tags=["messages"])
@@ -28,8 +28,13 @@ message_router = APIRouter(prefix="/messages", tags=["messages"])
 
 
 @chat_router.get("", response_model=list[chat_schemas.Chat])
-async def user_chats(offset: int = 0, limit: int = 100, user: User = Depends(current_user)):
-    chats_obj = user.chats[offset:offset+limit]
+async def user_chats(
+        offset: int = 0,
+        limit: int = 100,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    chats_obj = (await session.scalars(user.chats.statement)).all()[offset:offset+limit]
     return chats_obj
 
 
@@ -52,7 +57,8 @@ async def chat_messages(
         session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
-    return chat_obj.messages[offset:offset+limit]
+    messages_obj = (await session.scalars(chat_obj.messages.statement)).all()[offset:offset + limit]
+    return messages_obj
 
 
 @chat_router.get("/{chat_id}/users", response_model=list[user_schemas.UserRead])
@@ -64,7 +70,8 @@ async def chat_users(
         session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
-    return chat_obj.users[offset:offset+limit]
+    users_obj = (await session.scalars(chat_obj.users.statement)).all()[offset:offset + limit]
+    return users_obj
 
 
 @chat_router.get("/{chat_id}/tags", response_model=list[chat_schemas.Tag])
@@ -76,7 +83,8 @@ async def chat_tags(
         session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
-    return chat_obj.tags[offset:offset+limit]
+    tags_obj = (await session.scalars(chat_obj.tags.statement)).all()[offset:offset + limit]
+    return tags_obj
 
 
 @chat_router.post("", response_model=chat_schemas.Chat)
@@ -93,6 +101,23 @@ async def create_chat(
         await crud_user_chats.create(session, obj_in=user_chats_obj)
 
     return chat_obj
+
+
+@chat_router.post("/tags", response_model=list[search_schemas.Tag])
+async def update_user_tags(
+        tags: list[search_schemas.TagCreate],
+        chat_id: uuid.UUID,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    chat_obj = await crud_chat.get(session, model_id=chat_id)
+    tags_obj = await crud_tag.exist_create(session, tags=tags)
+
+    for tag in tags_obj:
+        chat_tags_create = search_schemas.ChatTagsCreate(user_id=chat_obj.id, tag_id=tag.id)
+        await crud_chat_tags.create(session, obj_in=chat_tags_create)
+
+    return tags_obj
 
 
 @chat_router.put("/{chat_id}", response_model=chat_schemas.Chat)
@@ -119,16 +144,16 @@ async def add_chat_users(
         await crud_user_chats.create(session, obj_in=user_chats_obj)
 
 
-@chat_router.put("/{chat_id}/tags")
-async def add_chat_tags(
-        chat_id: uuid.UUID,
-        tags_id: list[uuid.UUID],
-        user: User = Depends(current_user),
-        session: AsyncSession = Depends(get_async_session)
-):
-    for tag_id in tags_id:
-        chat_tags_obj = search_schemas.ChatTagsCreate(chat_id=chat_id, tags_id=tag_id)
-        await crud_chat_tags.create(session, obj_in=chat_tags_obj)
+# @chat_router.put("/{chat_id}/tags")
+# async def add_chat_tags(
+#         chat_id: uuid.UUID,
+#         tags_id: list[uuid.UUID],
+#         user: User = Depends(current_user),
+#         session: AsyncSession = Depends(get_async_session)
+# ):
+#     for tag_id in tags_id:
+#         chat_tags_obj = search_schemas.ChatTagsCreate(chat_id=chat_id, tags_id=tag_id)
+#         await crud_chat_tags.create(session, obj_in=chat_tags_obj)
 
 
 @chat_router.delete("/{chat_id}", response_model=chat_schemas.Chat)
@@ -151,16 +176,16 @@ async def delete_chat_users(
         delete_user_chats_obj = crud_user_chats.delete(session, model_id=user_chats_obj.id)
 
 
-@chat_router.delete("/{chat_id}/tags")
-async def delete_chat_tags(
-        chat_id: uuid.UUID,
-        tags_id: list[uuid.UUID],
-        user: User = Depends(current_user),
-        session: AsyncSession = Depends(get_async_session)
-):
-    for tag_id in tags_id:
-        chat_tags_obj = crud_chat_tags.get_by_parameters(session, chat_id=chat_id, tag_id=tag_id)
-        delete_chat_tags_obj = crud_user_chats.delete(session, model_id=chat_tags_obj.id)
+# @chat_router.delete("/{chat_id}/tags")
+# async def delete_chat_tags(
+#         chat_id: uuid.UUID,
+#         tags_id: list[uuid.UUID],
+#         user: User = Depends(current_user),
+#         session: AsyncSession = Depends(get_async_session)
+# ):
+#     for tag_id in tags_id:
+#         chat_tags_obj = crud_chat_tags.get_by_parameters(session, chat_id=chat_id, tag_id=tag_id)
+#         delete_chat_tags_obj = crud_user_chats.delete(session, model_id=chat_tags_obj.id)
 
 
 #####################

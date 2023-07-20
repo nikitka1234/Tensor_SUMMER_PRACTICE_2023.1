@@ -27,7 +27,8 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    last_login: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    # должен будет находиться в external
+    # last_login: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     external: Mapped[dict] = mapped_column(JSONB, nullable=True)
 
@@ -38,9 +39,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     # status: Mapped[str] = mapped_column(String(length=320))
     # emoji_status: Mapped[str | None] = mapped_column(String(length=64))
 
-    messages: Mapped[list["Message"]] = relationship("Message", back_populates="user", lazy="selectin")
-    chats: Mapped[list["Chat"]] = relationship(secondary="user_chats", back_populates="users", lazy="selectin")
-    tags: Mapped[list["Tag"]] = relationship(secondary="user_tags", back_populates="users", lazy="selectin")
+    messages: Mapped[list["Message"]] = relationship("Message", back_populates="user", lazy="dynamic")
+    chats: Mapped[list["Chat"]] = relationship(secondary="user_chats", back_populates="users", lazy="dynamic")
+    tags: Mapped[list["Tag"]] = relationship(secondary="user_tags", back_populates="users", lazy="dynamic")
 
-    user_chats_association: Mapped[list["UserChats"]] = relationship(back_populates="user", viewonly=True)
-    user_tags_association: Mapped[list["UserTags"]] = relationship(back_populates="user", viewonly=True)
+    # user_chats_association: Mapped[list["UserChats"]] = relationship(back_populates="user", viewonly=True)
+    # user_tags_association: Mapped[list["UserTags"]] = relationship(back_populates="user", viewonly=True)

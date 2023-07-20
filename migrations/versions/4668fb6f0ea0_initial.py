@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: d06dcd5dad76
+Revision ID: 4668fb6f0ea0
 Revises: 
-Create Date: 2023-07-10 21:39:31.871486
+Create Date: 2023-07-20 17:00:07.736320
 
 """
 import fastapi_users_db_sqlalchemy
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'd06dcd5dad76'
+revision = '4668fb6f0ea0'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,21 +22,21 @@ def upgrade() -> None:
     op.create_table('categories',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('title', sa.String(length=320), nullable=False),
-    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('title')
     )
     op.create_table('chats',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('type', sa.String(length=320), nullable=False),
-    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
-    sa.Column('parent_id', sa.UUID(), nullable=False),
+    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+    sa.Column('parent_id', sa.UUID(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['parent_id'], ['chats.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -48,9 +48,8 @@ def upgrade() -> None:
     sa.Column('is_verified', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
-    sa.Column('last_login', sa.DateTime(), nullable=False),
-    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('id', fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -60,10 +59,10 @@ def upgrade() -> None:
     sa.Column('text', sa.Text(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('chat_id', sa.UUID(), nullable=False),
-    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('external', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['chat_id'], ['chats.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -73,7 +72,8 @@ def upgrade() -> None:
     sa.Column('category_id', sa.UUID(), nullable=False),
     sa.Column('title', sa.String(length=320), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('title')
@@ -84,30 +84,33 @@ def upgrade() -> None:
     sa.Column('chat_id', sa.UUID(), nullable=False),
     sa.Column('role', sa.String(length=320), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['chat_id'], ['chats.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id', 'user_id', 'chat_id')
     )
     op.create_table('chat_tags',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('chat_id', sa.UUID(), nullable=False),
     sa.Column('tag_id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['chat_id'], ['chats.id'], ),
     sa.ForeignKeyConstraint(['tag_id'], ['tags.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id', 'chat_id', 'tag_id')
     )
     op.create_table('user_tags',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('tag_id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['tag_id'], ['tags.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id', 'user_id', 'tag_id')
     )
     # ### end Alembic commands ###
 

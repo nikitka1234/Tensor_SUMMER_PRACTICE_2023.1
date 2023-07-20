@@ -26,8 +26,9 @@ class TagDB(BaseModel):
     category_id: uuid.UUID
     title: str = Field(max_length=320)
 
-    created_at: datetime
-    deleted_at: datetime | None
+    # created_at: datetime
+    # updated_at: datetime
+    # deleted_at: datetime | None
 
     class Config:
         orm_mode = True
@@ -59,8 +60,9 @@ class UserTagsDB(BaseModel):
     user_id: uuid.UUID
     tag_id: uuid.UUID
 
-    created_at: datetime
-    deleted_at: datetime | None
+    # created_at: datetime
+    # updated_at: datetime
+    # deleted_at: datetime | None
 
     class Config:
         orm_mode = True
@@ -92,8 +94,9 @@ class ChatTagsDB(BaseModel):
     chat_id: uuid.UUID
     tag_id: uuid.UUID
 
-    created_at: datetime
-    deleted_at: datetime | None
+    # created_at: datetime
+    # updated_at: datetime
+    # deleted_at: datetime | None
 
     class Config:
         orm_mode = True
@@ -125,9 +128,9 @@ class CategoryDB(BaseModel):
     title: str = Field(max_length=320)
     external: dict
 
-    created_at: datetime
-    updated_at: datetime
-    deleted_at: datetime | None
+    # created_at: datetime
+    # updated_at: datetime
+    # deleted_at: datetime | None
 
     # tags: list[Tag]
 
