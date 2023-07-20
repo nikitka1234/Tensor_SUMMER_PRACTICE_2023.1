@@ -1,5 +1,6 @@
 import uuid
 
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +17,20 @@ from .schemas import (
 
 
 class CRUDMessage(CRUDBase[Message, MessageCreate, MessageUpdate]):
-    pass
+    async def create(
+            self,
+            db: AsyncSession,
+            *,
+            user_id: uuid.UUID,
+            obj_in: MessageCreate
+    ) -> Message:
+        obj_in_data = jsonable_encoder(obj_in)
+        obj_in_data["user_id"] = user_id
+        db_obj = self.model(**obj_in_data)  # type: ignore
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
 
 
 class CRUDUserChats(CRUDBase[UserChats, UserChatsCreate, UserChatsUpdate]):

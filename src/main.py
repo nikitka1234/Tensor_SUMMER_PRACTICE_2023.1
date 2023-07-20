@@ -4,9 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from .base import Base
 from .base_init import *
 
-from src.api.api import router as auth_router
-from src.chat.router import router as chat_router
-from src.search.router import router as  search_router
+from src.auth.router import router as auth_router
+from src.chat.router import chat_router, message_router
+from src.search.router import category_router, tag_router
 
 app = FastAPI(
     title="Tensor_SUMMER_PRACTICE_2023.1"
@@ -22,5 +22,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
-app.include_router(chat_router, prefix="/chats", tags=["/chats"])
-app.include_router(search_router, prefix="/search", tags=["/search"])
+app.include_router(chat_router)
+app.include_router(message_router)
+app.include_router(category_router)
+app.include_router(tag_router)
