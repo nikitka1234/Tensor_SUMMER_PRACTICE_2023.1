@@ -5,8 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.crud_base import CRUDBase
-from .models import Message, UserChats, Chat
-from .schemas import (
+from src.chat.models import Message, UserChats, Chat
+from src.chat.schemas import (
     MessageCreate,
     MessageUpdate,
     UserChatsCreate,

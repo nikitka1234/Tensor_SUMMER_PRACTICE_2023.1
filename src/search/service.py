@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.crud_base import CRUDBase
-from .models import Tag, UserTags, ChatTags, Category
-from .schemas import (
+from src.search.models import Tag, UserTags, ChatTags, Category
+from src.search.schemas import (
     TagCreate,
     TagUpdate,
     UserTagsCreate,

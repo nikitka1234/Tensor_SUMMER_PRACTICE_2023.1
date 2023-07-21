@@ -19,10 +19,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     async def get(self, db: AsyncSession, *, model_id: uuid.UUID | int) -> ModelType | None:
-        q = select(self.model).where(self.model.id == model_id)
-        result = await db.execute(q)
-        curr = result.scalar()
-        return curr
+        model_obj = await db.get(self.model, model_id)
+        return model_obj
 
     async def get_multi(
             self,

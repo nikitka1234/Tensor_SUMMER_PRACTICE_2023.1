@@ -4,9 +4,9 @@ from fastapi import Depends
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-from .config import database_settings
+from src.config import database_settings
 
-from .auth.models import User
+from src.auth.models import User
 
 
 # Указание echo=True при инициализации движка позволит нам увидеть сгенерированные SQL-запросы в консоли.

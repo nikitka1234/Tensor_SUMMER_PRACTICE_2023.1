@@ -1,22 +1,19 @@
 import uuid
 
-from fastapi import WebSocket, WebSocketDisconnect, APIRouter, Depends
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import HTMLResponse
-from sqlalchemy import insert
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_async_session
-from .manager import manager
+from src.database import get_async_session
 
-from .service import crud_chat, crud_message, crud_user_chats
-from ..auth.models import User
-from ..api.deps import current_user
+from src.chat.service import crud_chat, crud_message, crud_user_chats
+from src.auth.models import User
+from src.api.deps import current_user
 
-from ..auth import schemas as user_schemas
-from ..chat import schemas as chat_schemas
-from ..search import schemas as search_schemas
-from ..search.service import crud_chat_tags, crud_tag, crud_user_tags
+from src.auth import schemas as user_schemas
+from src.chat import schemas as chat_schemas
+from src.search import schemas as search_schemas
+from src.search.service import crud_chat_tags, crud_tag
+
 
 chat_router = APIRouter(prefix="/chats", tags=["chats"])
 message_router = APIRouter(prefix="/messages", tags=["messages"])
@@ -34,7 +31,7 @@ async def user_chats(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    chats_obj = (await session.scalars(user.chats.statement)).all()[offset:offset+limit]
+    chats_obj = (await session.scalars(user.chats.statement.offset(offset).limit(limit))).all()
     return chats_obj
 
 
@@ -57,7 +54,7 @@ async def chat_messages(
         session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
-    messages_obj = (await session.scalars(chat_obj.messages.statement)).all()[offset:offset + limit]
+    messages_obj = (await session.scalars(chat_obj.messages.statement.offset(offset).limit(limit))).all()
     return messages_obj
 
 
@@ -70,7 +67,7 @@ async def chat_users(
         session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
-    users_obj = (await session.scalars(chat_obj.users.statement)).all()[offset:offset + limit]
+    users_obj = (await session.scalars(chat_obj.users.statement.offset(offset).limit(limit))).all()
     return users_obj
 
 
@@ -83,7 +80,7 @@ async def chat_tags(
         session: AsyncSession = Depends(get_async_session)
 ):
     chat_obj = await crud_chat.get(session, model_id=chat_id)
-    tags_obj = (await session.scalars(chat_obj.tags.statement)).all()[offset:offset + limit]
+    tags_obj = (await session.scalars(chat_obj.tags.statement.offset(offset).limit(limit))).all()
     return tags_obj
 
 
@@ -103,8 +100,8 @@ async def create_chat(
     return chat_obj
 
 
-@chat_router.post("/tags", response_model=list[search_schemas.Tag])
-async def update_user_tags(
+@chat_router.post("/{chat_id}/tags", response_model=list[search_schemas.Tag])
+async def update_chat_tags(
         tags: list[search_schemas.TagCreate],
         chat_id: uuid.UUID,
         user: User = Depends(current_user),
@@ -144,18 +141,6 @@ async def add_chat_users(
         await crud_user_chats.create(session, obj_in=user_chats_obj)
 
 
-# @chat_router.put("/{chat_id}/tags")
-# async def add_chat_tags(
-#         chat_id: uuid.UUID,
-#         tags_id: list[uuid.UUID],
-#         user: User = Depends(current_user),
-#         session: AsyncSession = Depends(get_async_session)
-# ):
-#     for tag_id in tags_id:
-#         chat_tags_obj = search_schemas.ChatTagsCreate(chat_id=chat_id, tags_id=tag_id)
-#         await crud_chat_tags.create(session, obj_in=chat_tags_obj)
-
-
 @chat_router.delete("/{chat_id}", response_model=chat_schemas.Chat)
 async def delete_chat(
         chat_id: uuid.UUID, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)
@@ -173,19 +158,7 @@ async def delete_chat_users(
 ):
     for user_id in users_id:
         user_chats_obj = crud_user_chats.get_by_parameters(session, chat_id=chat_id, user_id=user_id)
-        delete_user_chats_obj = crud_user_chats.delete(session, model_id=user_chats_obj.id)
-
-
-# @chat_router.delete("/{chat_id}/tags")
-# async def delete_chat_tags(
-#         chat_id: uuid.UUID,
-#         tags_id: list[uuid.UUID],
-#         user: User = Depends(current_user),
-#         session: AsyncSession = Depends(get_async_session)
-# ):
-#     for tag_id in tags_id:
-#         chat_tags_obj = crud_chat_tags.get_by_parameters(session, chat_id=chat_id, tag_id=tag_id)
-#         delete_chat_tags_obj = crud_user_chats.delete(session, model_id=chat_tags_obj.id)
+        deleted_user_chats_obj = crud_user_chats.delete(session, model_id=user_chats_obj.id)
 
 
 #####################
@@ -194,8 +167,13 @@ async def delete_chat_users(
 
 
 @message_router.get("", response_model=list[chat_schemas.Message])
-async def user_messages(offset: int = 0, limit: int = 100, user: User = Depends(current_user)):
-    messages_obj = user.messages[offset:offset+limit]
+async def user_messages(
+        offset: int = 0,
+        limit: int = 100,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    messages_obj = (await session.scalars(user.messages.statement.offset(offset).limit(limit))).all()
     return messages_obj
 
 
@@ -235,7 +213,7 @@ async def create_message(
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
-    message_obj = await crud_message.create(session, user_id=user.id, obj_in=message)
+    message_obj = await crud_message.create_user(session, user_id=user.id, obj_in=message)
     return message_obj
 
 
@@ -260,21 +238,3 @@ async def delete_message(
     message_obj = await crud_message.get(session, model_id=message_id)
     deleted_message_obj = await crud_message.delete(session, model_id=message_obj.id)
     return deleted_message_obj
-
-
-# @app.get("/")
-# async def get():
-#     return HTMLResponse(html)
-#
-#
-# @app.websocket("/ws/{client_id}")
-# async def websocket_endpoint(websocket: WebSocket, client_id: int):
-#     await manager.connect(websocket)
-#     try:
-#         while True:
-#             data = await websocket.receive_text()
-#             await manager.send_personal_message(f"You wrote: {data}", websocket)
-#             await manager.broadcast(f"Client #{client_id} says: {data}")
-#     except WebSocketDisconnect:
-#         manager.disconnect(websocket)
-#         await manager.broadcast(f"Client #{client_id} left the chat")

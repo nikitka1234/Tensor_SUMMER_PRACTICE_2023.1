@@ -8,11 +8,11 @@ import uuid
 from datetime import datetime
 
 from src.base import Base
-from .choices import ChatType, UserRole
+from src.chat.choices import ChatType, UserRole
 
 if TYPE_CHECKING:
     from src.auth.models import User
-    from src.search.models import Tag, ChatTags
+    from src.search.models import Tag
 
 
 class Message(Base):
@@ -44,9 +44,6 @@ class UserChats(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    # user: Mapped["User"] = relationship("User", back_populates="user_chats_association")
-    # chat: Mapped["Chat"] = relationship("Chat", back_populates="user_chats_association")
-
 
 class Chat(Base):
     __tablename__ = "chats"
@@ -63,6 +60,3 @@ class Chat(Base):
     messages: Mapped[list["Message"]] = relationship("Message", back_populates="chat", lazy="dynamic")
     users: Mapped[list["User"]] = relationship(secondary="user_chats", back_populates="chats", lazy="dynamic")
     tags: Mapped[list["Tag"]] = relationship(secondary="chat_tags", back_populates="chats", lazy="dynamic")
-
-    # user_chats_association: Mapped[list["UserChats"]] = relationship(back_populates="chat", viewonly=True)
-    # chat_tags_association: Mapped[list["ChatTags"]] = relationship(back_populates="chat", viewonly=True)

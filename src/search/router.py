@@ -4,15 +4,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from .service import crud_tag, crud_user_tags, crud_chat_tags, crud_category
+from src.search.service import crud_tag, crud_user_tags, crud_chat_tags, crud_category
 
-from .choices import Holder
-from ..api.deps import current_user
+from src.search.choices import Holder
+from src.api.deps import current_user, current_superuser
 
-from ..auth.models import User
-from ..auth import schemas as user_schemas
-from ..chat import schemas as chat_schemas
-from ..search import schemas as search_schemas
+from src.auth.models import User
+from src.auth import schemas as user_schemas
+from src.chat import schemas as chat_schemas
+from src.search import schemas as search_schemas
 
 category_router = APIRouter(prefix="/categories", tags=["categories"])
 tag_router = APIRouter(prefix="/tags", tags=["tags"])
@@ -36,18 +36,25 @@ async def categories(
 
 @category_router.get("/{category_id}", response_model=search_schemas.Category)
 async def category(
-        category_id: uuid.UUID, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)
+        category_id: uuid.UUID,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
     category_obj = await crud_category.get(session, model_id=category_id)
     return category_obj
 
 
-@category_router.get("/{category_id}/tags", response_model=list[search_schemas.Tag])
-async def category_tags(
-        category_id: uuid.UUID, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)
-):
-    category_obj = await crud_category.get(session, model_id=category_id)
-    return category_obj.tags
+# @category_router.get("/{category_id}/tags", response_model=list[search_schemas.Tag])
+# async def category_tags(
+#         category_id: uuid.UUID,
+#         offset: 0,
+#         limit: 100,
+#         user: User = Depends(current_user),
+#         session: AsyncSession = Depends(get_async_session)
+# ):
+#     category_obj = await crud_category.get(session, model_id=category_id)
+#     tags_obj = (await session.scalars(category_obj.tags.statement.offset(offset).limit(limit))).all()
+#     return tags_obj
 
 
 @category_router.post("", response_model=list[search_schemas.Category])
@@ -126,73 +133,38 @@ async def tag_category(
 
 @tag_router.get("/{tag_id}/users", response_model=list[user_schemas.UserRead])
 async def tag_users(
-        tag_id: uuid.UUID, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)
+        tag_id: uuid.UUID,
+        offset: int = 0,
+        limit: int = 100,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
     tag_obj = await crud_tag.get(session, model_id=tag_id)
-    return tag_obj.users
+    users_obj = (await session.scalars(tag_obj.users.statement.offset(offset).limit(limit))).all()
+    return users_obj
 
 
 @tag_router.get("/{tag_id}/chats", response_model=list[chat_schemas.Chat])
 async def tag_chats(
-        tag_id: uuid.UUID, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)
+        tag_id: uuid.UUID,
+        offset: int = 0,
+        limit: int = 100,
+        user: User = Depends(current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
     tag_obj = await crud_tag.get(session, model_id=tag_id)
-    return tag_obj.chats
+    chats_obj = (await session.scalars(tag_obj.chats.statement.offset(offset).limit(limit))).all()
+    return chats_obj
 
 
 @tag_router.post("", response_model=search_schemas.Tag)
 async def create_tag(
         tag: search_schemas.TagCreate,
-        holder: Holder,
-        holder_id: uuid.UUID,
         user: User = Depends(current_user),
         session: AsyncSession = Depends(get_async_session)
 ):
     tag_obj = await crud_tag.create(session, obj_in=tag)
-
-    if holder == Holder.user:
-        user_tags_create = search_schemas.UserTagsCreate(user_id=holder_id, tag_id=tag_obj.id)
-        await crud_user_tags.create(session, obj_in=user_tags_create)
-    elif holder == Holder.chat:
-        chat_tags_create = search_schemas.ChatTagsCreate(chat_id=holder_id, tag_id=tag_obj.id)
-        await crud_chat_tags.create(session, obj_in=chat_tags_create)
-
     return tag_obj
-
-
-@tag_router.post("/user", response_model=list[search_schemas.Tag])
-async def create_user_tags(
-        tags: list[search_schemas.TagCreate],
-        user: User = Depends(current_user),
-        session: AsyncSession = Depends(get_async_session)
-):
-    tags_obj = []
-
-    for tag in tags:
-        tag_obj = await crud_tag.create(session, obj_in=tag)
-        user_tags_create = search_schemas.UserTagsCreate(user_id=user.id, tag_id=tag_obj.id)
-        await crud_user_tags.create(session, obj_in=user_tags_create)
-        tags_obj.append(tag_obj)
-
-    return tags_obj
-
-
-@tag_router.post("/chat", response_model=list[search_schemas.Tag])
-async def create_chat_tags(
-        tags: list[search_schemas.TagCreate],
-        chat_id: uuid.UUID,
-        user: User = Depends(current_user),
-        session: AsyncSession = Depends(get_async_session)
-):
-    tags_obj = []
-
-    for tag in tags:
-        tag_obj = await crud_tag.create(session, obj_in=tag)
-        chat_tags_create = search_schemas.ChatTagsCreate(chat_id=chat_id, tag_id=tag_obj.id)
-        await crud_chat_tags.create(session, obj_in=chat_tags_create)
-        tags_obj.append(tag_obj)
-
-    return tags_obj
 
 
 @tag_router.put("", response_model=search_schemas.Tag)

@@ -1,11 +1,10 @@
 import uuid
 
 from pydantic import BaseModel
-from datetime import datetime
 
 from src.chat.choices import ChatType, UserRole
 
-from ..search.schemas import Tag
+from src.search.schemas import Tag
 
 
 ###################
@@ -31,10 +30,6 @@ class MessageDB(BaseModel):
     user_id: uuid.UUID
     chat_id: uuid.UUID
     external: dict
-
-    # created_at: datetime
-    # updated_at: datetime
-    # deleted_at: datetime | None
 
     class Config:
         orm_mode = True
@@ -67,10 +62,6 @@ class UserChatsDB(BaseModel):
     chat_id: uuid.UUID
     role: UserRole
 
-    # created_at: datetime
-    # updated_at: datetime
-    # deleted_at: datetime | None
-
     class Config:
         orm_mode = True
 
@@ -101,10 +92,6 @@ class ChatDB(BaseModel):
     type: ChatType
     external: dict
     parent_id: uuid.UUID | None
-
-    # created_at: datetime
-    # updated_at: datetime
-    # deleted_at: datetime | None
 
     # tags: list[Tag]
 

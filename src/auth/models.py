@@ -10,8 +10,8 @@ from datetime import datetime
 from src.base import Base
 
 if TYPE_CHECKING:
-    from src.chat.models import Message, Chat, UserChats
-    from src.search.models import Tag, UserTags
+    from src.chat.models import Message, Chat
+    from src.search.models import Tag
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
@@ -27,11 +27,8 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    # должен будет находиться в external
+    # долженs будeт находиться в external. Если поля используются на бэкенде - добавляем их в модель
     # last_login: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-
-    external: Mapped[dict] = mapped_column(JSONB, nullable=True)
-
     # full_name: Mapped[str] = mapped_column(String(length=320))
     # birth_date: Mapped[date] = mapped_column(Date)
     # photo: Mapped[str] = mapped_column(String(length=320))
@@ -39,9 +36,8 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     # status: Mapped[str] = mapped_column(String(length=320))
     # emoji_status: Mapped[str | None] = mapped_column(String(length=64))
 
+    external: Mapped[dict] = mapped_column(JSONB, nullable=True)
+
     messages: Mapped[list["Message"]] = relationship("Message", back_populates="user", lazy="dynamic")
     chats: Mapped[list["Chat"]] = relationship(secondary="user_chats", back_populates="users", lazy="dynamic")
     tags: Mapped[list["Tag"]] = relationship(secondary="user_tags", back_populates="users", lazy="dynamic")
-
-    # user_chats_association: Mapped[list["UserChats"]] = relationship(back_populates="user", viewonly=True)
-    # user_tags_association: Mapped[list["UserTags"]] = relationship(back_populates="user", viewonly=True)

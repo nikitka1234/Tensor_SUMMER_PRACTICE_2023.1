@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .base import Base
-from .base_init import *
+from src.base import Base
+from src.base_init import *
 
 from src.auth.router import router as auth_router
 from src.chat.router import chat_router, message_router
 from src.search.router import category_router, tag_router
+
 
 app = FastAPI(
     title="Tensor_SUMMER_PRACTICE_2023.1"

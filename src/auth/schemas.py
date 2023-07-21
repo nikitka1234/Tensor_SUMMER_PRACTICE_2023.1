@@ -3,16 +3,10 @@ import uuid
 from fastapi_users import schemas
 from pydantic import EmailStr
 
-from datetime import datetime
-
-from ..search.schemas import Tag
+from src.search.schemas import Tag
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    # created_at: datetime
-    # updated_at: datetime
-    # deleted_at: datetime | None = None
-    # last_login: datetime
     external: dict | None = None
 
     # tags: list[Tag]
