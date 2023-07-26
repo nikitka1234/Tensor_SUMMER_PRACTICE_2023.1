@@ -31,7 +31,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType]:
         q = select(self.model).offset(offset).limit(limit)
         result = await db.execute(q)
-        curr = list(result.scalars())
+        curr = result.scalars().all()
         return curr
 
     async def create(

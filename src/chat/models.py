@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Text, DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 
 from src.base import Base
-from src.chat.choices import ChatType, UserRole
+from src.chat.choices import ChatType, MessageType, UserRole
 
 if TYPE_CHECKING:
     from src.auth.models import User
@@ -19,7 +19,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
-    text: Mapped[str] = mapped_column(Text, nullable=False)
+    type: Mapped[MessageType] = mapped_column(String(length=320), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("users.id"), nullable=False)
     chat_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("chats.id"), nullable=False)
     external: Mapped[dict] = mapped_column(JSONB, nullable=True)

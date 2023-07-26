@@ -37,7 +37,7 @@ class CRUDUserTags(CRUDBase[UserTags, UserTagsCreate, UserTagsUpdate]):
     async def get_by_parameters(
             self, db: AsyncSession, *, user_id: uuid.UUID | int, tag_id: uuid.UUID | int
     ) -> UserTags:
-        q = select(self.model).where(self.model.user_id == user_id and self.model.tag_id == tag_id)
+        q = select(self.model).where(self.model.user_id == user_id, self.model.tag_id == tag_id)
         result = await db.execute(q)
         curr = result.scalar()
         return curr
@@ -47,7 +47,7 @@ class CRUDChatTags(CRUDBase[ChatTags, ChatTagsCreate, ChatTagsUpdate]):
     async def get_by_parameters(
             self, db: AsyncSession, *, chat_id: uuid.UUID | int, tag_id: uuid.UUID | int
     ) -> ChatTags:
-        q = select(self.model).where(self.model.chat_id == chat_id and self.model.tag_id == tag_id)
+        q = select(self.model).where(self.model.chat_id == chat_id, self.model.tag_id == tag_id)
         result = await db.execute(q)
         curr = result.scalar()
         return curr

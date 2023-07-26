@@ -22,8 +22,8 @@ class UserCreate(schemas.BaseUserCreate):
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    password: str | None
     email: EmailStr | None
+    password: str | None
     is_active: bool | None
     is_superuser: bool | None
     is_verified: bool | None

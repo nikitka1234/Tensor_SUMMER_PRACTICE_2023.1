@@ -21,7 +21,7 @@ class CRUDMessage(CRUDBase[Message, MessageCreate, MessageUpdate]):
             self,
             db: AsyncSession,
             *,
-            user_id: uuid.UUID,
+            user_id: uuid.UUID | int,
             obj_in: MessageCreate
     ) -> Message:
         obj_in_data = jsonable_encoder(obj_in)
@@ -37,7 +37,7 @@ class CRUDUserChats(CRUDBase[UserChats, UserChatsCreate, UserChatsUpdate]):
     async def get_by_parameters(
             self, db: AsyncSession, *, chat_id: uuid.UUID | int, user_id: uuid.UUID | int
     ) -> UserChats:
-        q = select(self.model).where(self.model.chat_id == chat_id and self.model.user_id == user_id)
+        q = select(self.model).where(self.model.chat_id == chat_id, self.model.user_id == user_id)
         result = await db.execute(q)
         curr = result.scalar()
         return curr
