@@ -1,0 +1,81 @@
+pip install fastapi[all]
+pip install sqlalchemy alembic psycopg2 (для Linux или MacOS пишем psycopg2-binary)
+
+sqlalchemy - orm для работы с БД с помощью моделей
+alembic - библиотека на основе sqlalchemy для миграций
+psycopg2 - коннектор для работы с postgres (синхронный)
+
+pip install python-dotenv
+
+dotenv - для работы с переменными окружения
+
+pip install asyncpg
+
+asyncpg - коннектор для работы с postgres (асинхронный)
+
+
+uvicorn main:app --reload (запуск)
+
+The command uvicorn main:app refers to:
+main: the file main.py (the Python "module").
+app: the object created inside of main.py with the line app = FastAPI().
+--reload: make the server restart after code changes. Only use for development.
+
+после создания моделей запускаем работу миграций
+
+alembic init migrations
+
+После этого будет создана папка с миграциями и конфигурационный файл для алембика.
+
+В alembic.ini нужно задать адрес базы данных, в которую будем катать миграции.
+Дальше идём в папку с миграциями и открываем env.py, там вносим изменения в блок, где написано
+from myapp import mymodel
+
+from main import Base
+target_metadata = Base.metadata
+# target_metadata = None
+
+Внутри файла env.py добавляем
+
+import os
+import sys
+
+sys.path.append(os.path.join(sys.path[0], 'src'))
+
+в конце пути до бд добавляем ?async_fallback=True
+
+# config.set_main_option('sqlalchemy.url', os.environ.get("DATABASE_URL", 'postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi'))
+
+section = config.config_ini_section
+config.set_section_option(section, [название значения в файле ini], [само значение])
+
+Дальше вводим: alembic revision --autogenerate -m "comment[например Init_db]" - делается при любых изменениях моделей
+Будет создана миграция
+Дальше вводим: alembic upgrade heads
+
+
+pip install 'fastapi-users[sqlalchemy]'
+
+fastapi-users - библиотека для авторизации
+
+pip install websockets
+
+pip install pytest pytest-asyncio
+
+создаем в корневой папке проекта файл pyproject.toml - в нем будет для pytest указываться где лежит приложение
+
+Содержимое файла:
+[tool.pytest.ini_options]
+pythonpath = [
+    ".", "src",
+]
+asyncio_mode="auto"
+
+в папке с тестами создаем файл conftest.py - ходная точка для pytest. Задаются важные фикстуры: соединение с базой данных, создание базы данных
+
+запуск тестов (два варианта: второй более развернутый)
+pytest tests/
+pytest -v tests/
+
+pip install fastapi-pagination
+библиотека для пагинации (работает), но Николай сказал что лучше воспользоваться встроенными offset и limit
